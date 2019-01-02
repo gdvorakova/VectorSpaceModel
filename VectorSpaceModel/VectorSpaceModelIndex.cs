@@ -36,7 +36,10 @@ namespace VectorSpaceModel
 
     public void Create()            
     {
-      CreateVocabulary();
+      //CreateVocabulary();
+      //SerializeIndex();
+
+      DeserializeIndex();
 
       ComputeCosineScore computeScore;
 
@@ -214,6 +217,41 @@ namespace VectorSpaceModel
       fPostingsList = fDocumentReader.PostingsList;
       fDocuments = fDocumentReader.Documents;
       fQueries = fDocumentReader.Queries;
+    }
+
+    private void SerializeIndex()
+    {
+      var fDocumentReader = new DocumentReader();
+      var docIndex = -1;
+
+      foreach (string doc in fDocumentFiles)
+      {
+        docIndex++;
+        fDocumentReader.AddWordsFromDocToVocabulary(doc + ".vert", docIndex);
+      }
+
+      foreach (string topic in fTopicFiles)
+      {
+        fDocumentReader.AddWordsFromQueryToVocabulary(topic);
+      }
+
+      var serializer = new Serializer();
+
+      serializer.Serialize(fDocumentReader.DocumentFrequency, "doc_frequency.txt");
+      serializer.Serialize(fDocumentReader.PostingsList, "postings_list.txt");
+      serializer.Serialize(fDocumentReader.Documents, "documents.txt");
+      serializer.Serialize(fDocumentReader.Queries, "queries.txt");      
+    }
+
+    private void DeserializeIndex()
+    {
+      var deserializer = new Deserializer();
+
+      fDocumentFrequency = deserializer.Deserialize<SortedDictionary<string, int>>("doc_frequency.txt");
+      fPostingsList = deserializer.Deserialize<SortedDictionary<string, List<int>>>("postings_list.txt");    
+      fDocuments = deserializer.Deserialize<List<Document>>("documents.txt");
+      fQueries = deserializer.Deserialize<List<Query>>("queries.txt");
+
     }
 
     private void CosineNormalize()
